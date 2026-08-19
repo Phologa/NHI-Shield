@@ -1,0 +1,5 @@
+type BrandMarkProps = { compact?: boolean; light?: boolean };
+
+export function BrandMark({ compact = false, light = false }: BrandMarkProps) {
+  return <div className={`flex items-center gap-3 ${light ? "text-white" : "text-[var(--ink)]"}`} aria-label="NHI Shield"><svg aria-hidden="true" className={compact ? "h-8 w-8" : "h-10 w-10"} viewBox="0 0 40 40" fill="none"><path d="M20 3 34 9v9c0 9.4-5.9 15.9-14 19C11.9 33.9 6 27.4 6 18V9l14-6Z" stroke={light ? "#8BD4D0" : "#147D83"} strokeWidth="2.5"/><path d="m12 19 5 5 11-12" stroke={light ? "#fff" : "#102C46"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/><path d="M20 8v6" stroke={light ? "#8BD4D0" : "#147D83"} strokeWidth="2.5" strokeLinecap="round"/></svg><span><span className="block font-semibold tracking-tight">NHI Shield</span>{!compact && <span className={`block text-[10px] uppercase tracking-[0.16em] ${light ? "text-slate-300" : "text-[var(--muted)]"}`}>Machine Identity Security</span>}</span></div>;
+}

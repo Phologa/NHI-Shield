@@ -12,8 +12,13 @@ const serverSchema = publicSchema.extend({
 
 type EnvironmentInput = Record<string, string | undefined>;
 
-export function getPublicEnv(input: EnvironmentInput = process.env) {
-  return publicSchema.parse(input);
+const publicEnvironment: EnvironmentInput = {
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+};
+
+export function getPublicEnv(input?: EnvironmentInput) {
+  return publicSchema.parse(input ?? publicEnvironment);
 }
 
 export function getServerEnv(input: EnvironmentInput = process.env) {

@@ -2,7 +2,7 @@
 
 ## Current milestone
 
-Milestone 1: Platform Foundation.
+Milestone 1.5: Public Product Experience.
 
 ## Implemented
 
@@ -12,6 +12,11 @@ Milestone 1: Platform Foundation.
 - Structured secret-filtering logger, correlation IDs, health, and readiness endpoints.
 - Authenticated command-centre shell with navigation-only empty states.
 - Architecture, threat model, and API documentation.
+- Public NHI Shield website with Home, Platform, About, Security, Privacy, Contact, and Sign In experiences.
+- Reusable NHI Shield brand mark and coherent public/protected visual system.
+- Explicit public and protected route groups; protected navigation includes the requested AI Analyst route.
+- Zod-validated pilot-request form that honestly reports its submission channel is still being configured.
+- Static public environment references compatible with Next.js client-side replacement while retaining Zod validation.
 
 ## Repository structure
 
@@ -27,8 +32,8 @@ Tests cover role permissions, cross-organisation denial, and invalid environment
 
 ## Known issues and setup requirements
 
-Supabase credentials and a configured Auth user are required for interactive sign-in. The local environment used to create this repository currently blocks or stalls npm dependency installation under its script policy, so checks must be rerun after installation succeeds.
+The Supabase issue was caused by public environment values being read through a dynamic `process.env` object. Next.js client replacement requires statically referenced `process.env.NEXT_PUBLIC_*` expressions. `.env.local` is correctly named, rooted, ignored by Git, and contains the two public variables; values are never logged. Interactive sign-in still requires a real Supabase Auth user with a membership row. Pilot-request persistence and delivery are not configured yet. Next.js also reports that the `middleware` convention is deprecated in favor of `proxy`.
 
 ## Exact next milestone
 
-Milestone 2: Machine Identity Inventory and Data Ingestion. Do not implement it as part of Milestone 1.
+Milestone 2: Machine Identity Inventory and Data Ingestion. Do not implement it as part of Milestone 1.5.
