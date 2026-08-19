@@ -9,3 +9,13 @@ The browser may request a route, but it does not establish identity, organisatio
 ## Repository structure
 
 `app/` contains routes and route handlers. `components/` is reserved for shared UI components. `lib/authentication`, `lib/database`, `lib/organisations`, `lib/security`, `lib/validation`, and `lib/logging` are explicit domain seams for later work. `supabase/migrations/` contains versioned SQL. `tests/` contains unit and authorization tests. `docs/` contains architecture and operating notes.
+
+## Core security engine
+
+Migration `202608190002_core_security_engine.sql` adds tenant-scoped machine identities, credential metadata, resources, access relationships, findings, finding evidence, ingestion source registry, and audit events. Composite organisation-aware foreign keys prevent an access relationship from connecting records across organisations. Every new table has RLS and server actions derive `organisation_id` from authenticated membership context.
+
+Manual registration is implemented for machine identities, credential metadata, resources, and access relationships. No cloud/IAM connector or automatic discovery is claimed. The normalized `source_type` and ingestion source registry are reserved for future connector adapters.
+
+Credentials are metadata only. The schema has no field for passwords, API key values, tokens, private keys, or other secret material. Deterministic rules currently evaluate missing owners, elevated privilege, stale identities, expired credentials, credentials approaching expiry, and privileged access to high-sensitivity resources. Scores are bounded from 0 to 100. Confidence describes the quality and directness of rule evidence, not probability of compromise.
+
+Findings retain structured evidence and are upserted by stable rule/subject identity so repeated manual analysis does not create duplicate active findings. Audit events record meaningful security actions without secret values. A future AI analyst must call permission-aware server domain functions over these evidence records; it must not receive arbitrary SQL access.

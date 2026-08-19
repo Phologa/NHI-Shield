@@ -2,7 +2,7 @@
 
 ## Current milestone
 
-Milestone 1.5: Public Product Experience.
+Milestone 2.0: Core Security Engine.
 
 ## Implemented
 
@@ -34,6 +34,19 @@ Tests cover role permissions, cross-organisation denial, and invalid environment
 
 The Supabase issue was caused by public environment values being read through a dynamic `process.env` object. Next.js client replacement requires statically referenced `process.env.NEXT_PUBLIC_*` expressions. `.env.local` is correctly named, rooted, ignored by Git, and contains the two public variables; values are never logged. Interactive sign-in still requires a real Supabase Auth user with a membership row. Pilot-request persistence and delivery are not configured yet. Next.js also reports that the `middleware` convention is deprecated in favor of `proxy`.
 
+## Core engine implementation
+
+- Added migration `202608190002_core_security_engine.sql` for machine identities, credential metadata, resources, access relationships, findings, finding evidence, ingestion sources and audit events.
+- Added composite organisation-aware foreign keys, indexes, updated-at triggers and RLS policies for all new security tables.
+- Added tenant-scoped server context, repositories, validated server actions and deterministic risk rules.
+- Added real manual inventory, identity detail, resource/access relationship, findings/evidence, overview and audit-log workflows.
+- Credential registration explicitly stores metadata only; no secret values are accepted.
+- Incidents, AI Security Analyst and Remediation remain not configured. No automatic connectors or discovery are claimed.
+
+## Core engine limitations
+
+The migration must be applied to the intended Supabase project before the new workflows can persist data. CSV import, external connectors, continuous monitoring, incidents, AI analysis and remediation belong to later milestones. Risk confidence is evidence quality, not compromise probability.
+
 ## Exact next milestone
 
-Milestone 2: Machine Identity Inventory and Data Ingestion. Do not implement it as part of Milestone 1.5.
+Milestone 2.1: Detection and activity monitoring. Do not implement it as part of the Core Security Engine.
