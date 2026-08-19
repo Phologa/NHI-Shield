@@ -1,0 +1,11 @@
+create extension if not exists "pgcrypto";
+create type public.membership_role as enum ('platform_admin','organisation_admin','security_analyst','viewer');
+create table public.organisations (id uuid primary key default gen_random_uuid(), name text not null, created_at timestamptz not null default now());
+create table public.memberships (user_id uuid not null references auth.users(id) on delete cascade, organisation_id uuid not null references public.organisations(id) on delete cascade, role public.membership_role not null default 'viewer', created_at timestamptz not null default now(), primary key (user_id, organisation_id));
+alter table public.organisations enable row level security;
+alter table public.memberships enable row level security;
+create or replace function public.is_org_member(target_org uuid) returns boolean language sql stable security definer set search_path = public as $$ select exists (select 1 from public.memberships where user_id = auth.uid() and organisation_id = target_org); $$;
+create or replace function public.is_org_admin(target_org uuid) returns boolean language sql stable security definer set search_path = public as $$ select exists (select 1 from public.memberships where user_id = auth.uid() and organisation_id = target_org and role in ('platform_admin','organisation_admin')); $$;
+create policy "members read own organisations" on public.organisations for select using (public.is_org_member(id));
+create policy "members read own memberships" on public.memberships for select using (user_id = auth.uid() or public.is_org_member(organisation_id));
+create policy "admins manage memberships" on public.memberships for all using (public.is_org_admin(organisation_id)) with check (public.is_org_admin(organisation_id));

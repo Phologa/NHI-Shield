@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+:root { --ink: #17212b; --muted: #617080; --line: #dbe3e8; --paper: #f7f9fa; --navy: #102c46; --teal: #147d83; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: Georgia, "Times New Roman", serif; }
+button, input { font: inherit; }
+.sans { font-family: ui-sans-serif, system-ui, sans-serif; }
+.focus-ring:focus-visible { outline: 3px solid #62b9bd; outline-offset: 3px; }
