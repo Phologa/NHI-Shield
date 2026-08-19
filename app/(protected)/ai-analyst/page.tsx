@@ -1,0 +1,3 @@
+import { AiAnalyst } from "@/components/ai-analyst";
+import { requireSecurityContext } from "@/lib/security/context";
+export default async function AiAnalystPage() { await requireSecurityContext("view_security_data"); return <section><p className="font-sans text-sm font-semibold uppercase tracking-wider text-[var(--teal)]">Conversational security help</p><h2 className="mt-3 font-serif text-4xl">Ask NHI Shield AI</h2><p className="mt-4 max-w-3xl font-sans text-sm leading-6 text-[var(--muted)]">Ask about this organisation’s recorded risks and where to go next. Safe guide mode is available now; external AI interpretation remains disabled until its data-sharing boundary is explicitly configured and approved.</p><div className="mt-8"><AiAnalyst /></div></section>; }

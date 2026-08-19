@@ -1,0 +1,5 @@
+import { CsvImportForm } from "@/components/csv-import-form";
+import { requireSecurityContext } from "@/lib/security/context";
+import { hasPermission } from "@/lib/security/permissions";
+
+export default async function ImportPage() { const context = await requireSecurityContext("view_security_data"); if (!hasPermission(context.role, "manage_security_inventory")) return <section><h2 className="font-serif text-4xl">Import / Add Data</h2><p className="font-sans mt-4 text-sm text-[var(--muted)]">Your Viewer role can read authorised data but cannot import security records.</p></section>; return <section><p className="font-sans text-sm font-semibold uppercase tracking-wider text-[var(--teal)]">Ingestion</p><h2 className="mt-3 font-serif text-4xl">Import / Add Data</h2><p className="font-sans mt-4 max-w-2xl text-sm leading-6 text-[var(--muted)]">CSV is a safe structured import path for the normalized engine. Every row is validated before persistence. Credential imports accept metadata only.</p><div className="mt-8"><CsvImportForm /></div></section>; }

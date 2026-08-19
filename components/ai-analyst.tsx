@@ -1,0 +1,6 @@
+"use client";
+
+import { useActionState } from "react";
+import { askSecurityAnalyst, type AiResult } from "@/lib/security/ai-actions";
+const initial: AiResult = { ok: true };
+export function AiAnalyst() { const [state, action, pending] = useActionState(askSecurityAnalyst, initial); return <form action={action} className="border border-[var(--line)] bg-white p-6"><label className="font-sans text-sm font-semibold" htmlFor="question">What would you like to understand?</label><textarea className="focus-ring mt-3 min-h-36 w-full border border-[var(--line)] p-4 font-sans text-sm" id="question" name="question" placeholder="What are our biggest risks, and what should I review first?" required /><button className="focus-ring mt-4 bg-[var(--teal)] px-5 py-3 font-sans text-sm font-semibold text-white disabled:opacity-60" disabled={pending}>{pending ? "Checking authorised data…" : "Ask NHI Shield AI"}</button>{state.error && <p className="mt-4 border-l-2 border-amber-600 bg-amber-50 p-4 font-sans text-sm" role="alert">{state.error}</p>}{state.answer && <div className="mt-6 whitespace-pre-wrap border-l-2 border-[var(--teal)] bg-[var(--teal-soft)] p-5 font-sans text-sm leading-7" role="status">{state.answer}</div>}</form>; }

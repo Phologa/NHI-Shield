@@ -1,5 +1,22 @@
 # Milestone Status
 
+> Updated 2026-08-19: The local build now includes organisation onboarding and invitations, CSV import, activity/incidents, a tenant-scoped AI guide mode, controlled manual remediation, honest connector setup states, live reports, and simplified plain-English navigation. The historical milestone notes below describe the earlier baseline.
+
+## Completion-run update
+
+- **Ask NHI Shield AI** is prominent and uses a small tenant-scoped read surface. It labels facts, deterministic assessment and unavailable AI interpretation. It has no arbitrary SQL, destructive tool or external provider egress.
+- Remediation follows `proposed -> approved -> manual_action_required -> succeeded / failed / cancelled`; proposers cannot approve their own actions, and state changes are audited.
+- Data Sources identifies CSV as available and Microsoft Entra ID, AWS and Google Cloud as **Not Configured** until real credentials, least-privilege scopes and a scheduled worker exist.
+- Reports show current organisation facts and deterministic outputs. Scheduled email delivery is not configured.
+- Migration `202608190004_ai_remediation_connectors.sql` is local only and must be manually reviewed/applied after migration 003.
+- `APP_URL` plus `SUPABASE_SERVICE_ROLE_KEY` are required for invitation email delivery. SMTP remains a Supabase Auth configuration responsibility.
+- External AI interpretation requires an explicitly approved tenant-data egress and retention design. No tenant security data currently leaves NHI Shield for AI.
+- Remaining release gate: apply migrations 003/004 to staging and run full Organisation A versus Organisation B browser QA for Viewer, Security Analyst and Organisation Admin. Cross-tenant visibility is release-blocking.
+
+## Latest validation
+
+`npm run lint` passes with two non-failing server-action signature warnings; `npm run typecheck`, all 8 tests, and `npm run build` pass. The build generates 30 routes and reports only the existing middleware-to-proxy deprecation warning.
+
 ## Current milestone
 
 Milestone 2.0: Core Security Engine.
