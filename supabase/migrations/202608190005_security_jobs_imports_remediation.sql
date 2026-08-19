@@ -8,6 +8,7 @@ create table public.import_runs (
 );
 alter table public.import_runs enable row level security;
 create policy "members read import runs" on public.import_runs for select using (public.is_org_member(organisation_id));
+create policy "managers create import runs" on public.import_runs for insert with check (public.can_manage_security(organisation_id) and created_by=auth.uid());
 
 create or replace function public.import_security_csv(target_entity text, import_rows jsonb)
 returns jsonb language plpgsql security invoker set search_path = public as $$
@@ -45,7 +46,7 @@ begin
   end loop;
   insert into public.import_runs(organisation_id,entity_type,row_count,created_count,status,created_by) values(target_org,target_entity,jsonb_array_length(import_rows),created_count,'completed',auth.uid());
   insert into public.audit_events(organisation_id,actor_user_id,action,entity_type,metadata) values(target_org,auth.uid(),'csv_import_completed',target_entity,jsonb_build_object('rows',jsonb_array_length(import_rows),'created_or_updated',created_count));
-  return jsonb_build_object('created',created_count,'updated',updated_count);
+  return jsonb_build_object('processed',jsonb_array_length(import_rows));
 end; $$;
 revoke execute on function public.import_security_csv(text,jsonb) from public;
 grant execute on function public.import_security_csv(text,jsonb) to authenticated;
@@ -65,3 +66,37 @@ begin
 end; $$;
 revoke execute on function public.transition_remediation(uuid,public.remediation_status,text) from public;
 grant execute on function public.transition_remediation(uuid,public.remediation_status,text) to authenticated;
+
+create table public.analysis_runs (
+  id uuid primary key default gen_random_uuid(), organisation_id uuid not null references public.organisations(id) on delete cascade,
+  run_key text not null, status text not null check (status in ('running','completed','failed')), findings_created integer not null default 0,
+  incidents_created integer not null default 0, error_summary text, started_at timestamptz not null default now(), completed_at timestamptz,
+  unique(organisation_id,run_key), unique(organisation_id,id)
+);
+alter table public.incidents add column detection_key text;
+create unique index incidents_active_detection_key on public.incidents(organisation_id,detection_key) where status<>'resolved' and detection_key is not null;
+create unique index activity_request_id_unique on public.activity_events(organisation_id,source,request_id) where request_id is not null;
+create table public.ai_conversations (
+  id uuid primary key default gen_random_uuid(), organisation_id uuid not null references public.organisations(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade, title text not null default 'Security conversation', created_at timestamptz not null default now(), updated_at timestamptz not null default now(), unique(organisation_id,id)
+);
+create table public.ai_messages (
+  id uuid primary key default gen_random_uuid(), organisation_id uuid not null references public.organisations(id) on delete cascade,
+  conversation_id uuid not null, user_id uuid not null references auth.users(id) on delete cascade,
+  role text not null check(role in ('user','assistant')), content text not null check(char_length(content) between 1 and 12000),
+  citations jsonb not null default '[]', actions jsonb not null default '[]', created_at timestamptz not null default now(), unique(organisation_id,id),
+  foreign key(organisation_id,conversation_id) references public.ai_conversations(organisation_id,id) on delete cascade
+);
+create table public.notification_outbox (
+ id uuid primary key default gen_random_uuid(),organisation_id uuid not null references public.organisations(id) on delete cascade,
+ event_type text not null,recipient text,payload jsonb not null default '{}',status text not null default 'configuration_required' check(status in ('configuration_required','pending','sent','failed')),
+ attempt_count integer not null default 0,last_error text,created_at timestamptz not null default now(),sent_at timestamptz,unique(organisation_id,id)
+);
+create trigger ai_conversations_touch_updated_at before update on public.ai_conversations for each row execute function public.touch_updated_at();
+do $$ declare table_name text; begin foreach table_name in array array['analysis_runs','ai_conversations','ai_messages','notification_outbox'] loop
+  execute format('alter table public.%I enable row level security',table_name);
+  execute format('create policy %I on public.%I for select using (public.is_org_member(organisation_id))',table_name||'_members_read',table_name);
+end loop; end $$;
+create policy "users create own conversations" on public.ai_conversations for insert with check(public.is_org_member(organisation_id) and user_id=auth.uid());
+create policy "users update own conversations" on public.ai_conversations for update using(user_id=auth.uid() and public.is_org_member(organisation_id)) with check(user_id=auth.uid() and public.is_org_member(organisation_id));
+create policy "users create own messages" on public.ai_messages for insert with check(public.is_org_member(organisation_id) and user_id=auth.uid() and exists(select 1 from public.ai_conversations c where c.id=conversation_id and c.organisation_id=ai_messages.organisation_id and c.user_id=auth.uid()));

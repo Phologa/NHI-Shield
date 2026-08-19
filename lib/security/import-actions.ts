@@ -20,8 +20,8 @@ export async function importCsv(_previous: ImportResult, formData: FormData): Pr
       : { organisation_id: context.organisationId, machine_identity_id: item.machineIdentityId, resource_id: item.resourceId, access_level: item.accessLevel, privileged: item.privileged, source: "csv_import" });
     const { data, error } = await context.supabase.rpc("import_security_csv", { target_entity: entity, import_rows: payload });
     if (error) return { ok: false, errors: ["Nothing was imported. Check for duplicate records or references to records that do not exist in this company."] };
-    const result = (data ?? {}) as { created?: number; updated?: number };
+    const result = (data ?? {}) as { processed?: number };
     revalidatePath("/machine-identities"); revalidatePath("/access-graph"); revalidatePath("/overview"); revalidatePath("/data-sources");
-    return { ok: true, message: `Import complete: ${result.created ?? payload.length} created and ${result.updated ?? 0} updated.` };
+    return { ok: true, message: `Import complete: ${result.processed ?? payload.length} rows created or updated.` };
   } catch (error) { return { ok: false, errors: [error instanceof Error ? error.message : "The import could not be completed. Try again."] }; }
 }

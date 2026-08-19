@@ -1,6 +1,6 @@
 "use client";
 import { useActionState, useMemo, useState } from "react";
-import { csvSamples, csvTemplates, type ImportEntity, validateCsv } from "@/lib/security/csv-import";
+import { csvSamples, type ImportEntity, validateCsv } from "@/lib/security/csv-import";
 import { importCsv, type ImportResult } from "@/lib/security/import-actions";
 
 const initial: ImportResult = { ok: true };

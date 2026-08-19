@@ -1,5 +1,7 @@
 # Milestone Status
 
+> Completion run 2026-08-20: local branch `codex/final-completion` adds the real CSV preview/confirm transaction, bounded repeat analysis, multi-turn tenant-grounded AI provider boundary, DB-enforced remediation transitions, connector normalisation foundation, notification outbox, detailed report export, task-led Overview, and expanded security tests. Migration 005 is local-only and must be applied manually after 004. AI, scheduler, email delivery and cloud connectors remain configuration-required; live RLS/browser isolation QA remains a release blocker. See `COMPLETION-RUN.md` and `MIGRATIONS.md`.
+
 > Updated 2026-08-19: The local build now includes organisation onboarding and invitations, CSV import, activity/incidents, a tenant-scoped AI guide mode, controlled manual remediation, honest connector setup states, live reports, and simplified plain-English navigation. The historical milestone notes below describe the earlier baseline.
 
 ## Completion-run update
