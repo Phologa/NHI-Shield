@@ -20,3 +20,5 @@ Production deployment still requires Supabase project controls, redirect URL con
 - CSV secrets/formulas: secret-bearing headers are rejected and report exports neutralise spreadsheet formulas.
 - Remediation replay/approval abuse: transitions are row-locked and enforced by a database function; proposers cannot approve their own work.
 - Scheduler abuse: the job endpoint requires a server-held bearer secret and service role. Missing configuration fails closed.
+- Membership mass assignment and role escalation: authenticated clients have no direct membership mutation policy; audited RPCs verify organisation-admin authority and reject platform-admin assignment, self-demotion and self-removal.
+- Invite replay and misuse: only a hash is stored; acceptance locks the invite row and checks revocation, expiry, use count, intended role and optional email restriction before creating membership and audit records atomically.

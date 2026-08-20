@@ -6,6 +6,8 @@ NHI Shield is a modular monolith. Next.js owns the UI, protected server-rendered
 
 The browser may request a route, but it does not establish identity, organisation, role, or permission. The server refreshes the Supabase session, reads the authenticated user, queries membership for the requested organisation, and checks the permission. Database RLS independently restricts rows to memberships. The service-role key is never imported by browser modules.
 
+Users without a membership are redirected to the create-or-join onboarding workflow. Invitations contain a random one-time-displayed code; only its SHA-256 hash is persisted. Expiry, use limits, optional email restriction and intended role are checked in a locked database function. Direct membership and invite mutations are not available to authenticated clients: audited security-definer functions enforce administrator authority, prevent self-demotion/removal and prevent customer promotion to platform administrator. `user_profiles` mirrors only the name and email needed for member administration; it does not expose auth credentials.
+
 ## Repository structure
 
 `app/` contains routes and route handlers. `components/` is reserved for shared UI components. `lib/authentication`, `lib/database`, `lib/organisations`, `lib/security`, `lib/validation`, and `lib/logging` are explicit domain seams for later work. `supabase/migrations/` contains versioned SQL. `tests/` contains unit and authorization tests. `docs/` contains architecture and operating notes.

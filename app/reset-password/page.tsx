@@ -1,0 +1,13 @@
+"use client";
+
+import Link from "next/link";
+import { FormEvent, useState } from "react";
+import { BrandMark } from "@/components/brand-mark";
+import { createClient } from "@/lib/supabase/browser";
+import { resetPasswordSchema } from "@/lib/validation/auth";
+
+export default function ResetPasswordPage() {
+  const [error, setError] = useState<string | null>(null); const [message, setMessage] = useState<string | null>(null); const [busy, setBusy] = useState(false);
+  async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setError(null); setMessage(null); const parsed = resetPasswordSchema.safeParse(Object.fromEntries(new FormData(event.currentTarget).entries())); if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? "Check the passwords."); return; } setBusy(true); const { error: authError } = await createClient().auth.updateUser({ password: parsed.data.password }); if (authError) setError("This recovery link is invalid or expired. Request a new password reset email."); else setMessage("Your password has been updated. You can now sign in."); setBusy(false); }
+  return <main className="sans min-h-screen bg-[var(--navy)] p-6 text-white"><div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-2xl items-center justify-center"><section className="w-full bg-white p-10 text-[var(--ink)] shadow-2xl md:p-14"><BrandMark /><p className="mt-10 text-sm font-semibold uppercase tracking-wider text-[var(--teal)]">Account recovery</p><h1 className="mt-3 font-serif text-4xl">Choose a new password</h1><p className="mt-5 text-sm leading-6 text-[var(--muted)]">Open this page from the recovery email, then set a new password for your account.</p><form onSubmit={submit} className="mt-8 space-y-5"><label className="block text-sm font-medium">New password<input className="focus-ring mt-2 w-full border border-[var(--line)] px-3 py-3" name="password" type="password" minLength={8} required autoComplete="new-password" /></label><label className="block text-sm font-medium">Confirm new password<input className="focus-ring mt-2 w-full border border-[var(--line)] px-3 py-3" name="confirmPassword" type="password" minLength={8} required autoComplete="new-password" /></label>{error && <p className="text-sm text-red-700" role="alert">{error}</p>}{message && <p className="border-l-2 border-[var(--teal)] bg-[var(--teal-soft)] p-4 text-sm" role="status">{message}</p>}<button className="focus-ring w-full bg-[var(--teal)] px-4 py-3 font-semibold text-white disabled:opacity-60" disabled={busy}>{busy ? "Updating..." : "Update password"}</button></form><Link className="mt-6 inline-block text-sm font-semibold text-[var(--teal)]" href="/sign-in">Return to sign in</Link></section></div></main>;
+}
