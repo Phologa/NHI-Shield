@@ -1,6 +1,6 @@
 # NHI Shield
 
-NHI Shield is being developed as an AI cybersecurity monitoring platform. The current milestone ingests company security data and analyses it for non-human identity and access risk.
+NHI Shield is being developed to help organisations discover, understand, and control non-human and machine identities, credential/key metadata, access relationships, and related risk.
 
 ## Current capabilities
 
@@ -8,12 +8,12 @@ NHI Shield is being developed as an AI cybersecurity monitoring platform. The cu
 - Manual and CSV ingestion of machine identities, resources, credential metadata, and access relationships.
 - CSV validation, preview, explicit confirmation, and tested atomic-persistence handling. Live target-database persistence still requires environment verification.
 - Deterministic identity and access risk evaluation with findings, evidence, incidents, reports, and controlled remediation workflow.
-- A grounded, read-only AI Security Analyst integration boundary with citations and allow-listed navigation. Production answers are not operational until the required server configuration is supplied and verified.
+- A simplified AI Security Analyst page that remains not live-configured. AI-assisted investigation is a future operational milestone.
 - Public website, protected security workspace, health/readiness endpoints, and automated security-focused tests.
 
 ## Current limitations
 
-- The AI Analyst requires an approved OpenAI API deployment configuration before it can return answers.
+- AI-assisted investigation is not operational in the current release.
 - CSV and manual entry are the operational ingestion paths. Cloud connectors and scheduled sync are not configured.
 - Analysis is run from the application workflow; continuous AI monitoring is not claimed.
 - Remediation is controlled and human-approved. Autonomous remediation is not implemented.
@@ -38,7 +38,7 @@ findings, evidence, incidents, reports
 grounded AI interpretation and controlled response workflow
 ```
 
-The AI provider receives a bounded, non-secret context assembled by tenant-scoped read functions. Provider storage is disabled in the request. The model has no SQL access, organisation selector, secret access, arbitrary URL generation, or destructive tool.
+The current product path is deterministic: identity inventory links credential metadata to resources and access relationships, then produces evidence-backed findings and audit records. The AI page does not replace or alter that path.
 
 ## Setup
 

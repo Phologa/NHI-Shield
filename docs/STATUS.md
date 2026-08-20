@@ -1,42 +1,33 @@
 # Project status
 
-## Current release baseline
+## Product position
 
-- Production release commit: `7dbed185902203cbc9d1a4676b4ee89c2eff1e46`.
-- Phase history through `910a894` is preserved.
-- The release passed lint, TypeScript, 30 automated tests, and a production webpack build.
-- Public, sign-in, and unauthenticated AI-route smoke checks passed.
+NHI Shield is being developed to help organisations discover, understand, and control non-human and machine identities, credential/key metadata, access relationships, and related risk.
 
-## Current capabilities
+## Implemented and locally verified
 
-- Organisation-scoped authentication, roles, and row-level data isolation.
-- Manual and transactional CSV ingestion for identity and access records.
-- Deterministic security analysis, findings, evidence, incidents, reports, audit history, and controlled remediation.
-- A grounded, read-only AI Analyst integration boundary using authorised records and internal citations.
+- Organisation-scoped authentication context, role permissions, and migration-defined PostgreSQL row-level security.
+- Organisation administrators and security analysts can reach a dedicated manual machine-identity registration flow; Viewers do not see mutation controls and receive a read-only response if they open the route directly.
+- Manual server actions cover machine identities, credential metadata, resources, and access relationships. Organisation IDs come from authenticated membership context rather than submitted fields.
+- Deterministic analysis evaluates current inventory and writes findings, evidence, and an audit event.
+- CSV-only selection, required-schema guidance, downloadable examples, normalized supported headers, row preview, secret-bearing-column rejection, duplicate warnings, explicit confirmation, and server-side revalidation.
+- The import action does not call persistence before explicit confirmation. Transactional persistence functions and post-import navigation are implemented and tested at the application boundary.
+- Public pages share a restrained footer with accessible GitHub and LinkedIn links.
+- The AI page remains simplified and not live-configured; no AI provider or logic changes are part of this release.
 
-## Configuration required
+## Environment-dependent verification still required
 
-- AI answers require server-only `OPENAI_API_KEY` and `OPENAI_MODEL` deployment variables. Without both, questions are stored in the tenant-scoped conversation and no provider request or fabricated answer occurs.
-- The target database must be verified as having migrations `001` through `010` in order before live import persistence is accepted as tested.
-- Scheduled analysis, notification delivery, and cloud connectors require separate configuration and validation.
+- A real authenticated browser walkthrough of the complete manual workflow against the target Supabase project.
+- Confirmation that target migrations `001` through `010` are applied before accepting live CSV persistence as end-to-end verified.
+- Multi-organisation RLS and all-role browser testing in an isolated Supabase test project.
+- Authenticated production verification of protected inventory and import routes.
 
-## Current limitations
+## Future milestones, not current operational capabilities
 
-- Continuous AI monitoring, autonomous remediation, and operational cloud sync are not current capabilities.
-- Authenticated production AI and live CSV persistence require a configured test account and target-environment access for final verification.
-- Multi-organisation and multi-role browser/RLS verification remains a public-release gate.
-
-## Next public milestone
-
-1. Configure and verify the existing AI provider integration without changing its grounded/read-only design.
-2. Verify CSV preview, confirmation, persistence, import history, and downstream analysis against the target database.
-3. Complete the repository and history audit, resolve findings, and repeat all release checks.
-4. Change repository visibility only after explicit owner confirmation.
-
-## Future milestones
-
-- Least-privilege production connectors and scheduled ingestion.
-- Production notification delivery and scheduled analysis operations.
-- Expanded monitoring, AI evaluation, governance, and enterprise deployment controls.
-
-Future milestones are not represented as implemented features.
+- AI-assisted investigation when separately configured and verified.
+- Continuous monitoring and scheduled operations.
+- Real connectors and automated discovery.
+- Expanded monitoring of AI agents represented as machine identities.
+- Controlled remediation hardening.
+- Notifications and reporting operations.
+- Pilot hardening, multi-tenant acceptance testing, and production observability.

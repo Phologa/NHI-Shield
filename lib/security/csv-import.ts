@@ -4,7 +4,7 @@ import { accessRelationshipSchema, credentialMetadataSchema, machineIdentitySche
 export const importEntitySchema = z.enum(["security_inventory", "machine_identities", "credentials", "resources", "access_relationships"]);
 export type ImportEntity = z.infer<typeof importEntitySchema>;
 export type CsvRow = { row: number; values: Record<string, string> };
-export type ValidatedCsvRow = CsvRow & { valid: boolean; errors: string[]; parsed?: Record<string, unknown> };
+export type ValidatedCsvRow = CsvRow & { valid: boolean; errors: string[]; warnings: string[]; parsed?: Record<string, unknown> };
 
 const forbiddenTerms = ["password", "secret", "token", "api_key", "apikey", "private_key", "client_secret", "credential_value", "secret_value"];
 const headerAliases: Record<string, string> = { account_name: "name", identity_name: "name", account_type: "identity_type", type: "identity_type", source: "provider", provider_id: "external_id", account_id: "external_id", owner: "owner_name", owner_mail: "owner_email", privilege: "privilege_level", last_active: "last_seen_at", target_name: "resource_name", target_type: "resource_type", target_id: "resource_external_id", target_sensitivity: "resource_sensitivity", permission: "access_level", is_privileged: "access_privileged", credential_name: "credential_label", credential_state: "credential_status" };
@@ -90,11 +90,18 @@ function issueMessage(issue: z.core.$ZodIssue) {
 
 export function validateCsv(entity: ImportEntity, text: string): ValidatedCsvRow[] {
   const schema = entity === "security_inventory" ? inventorySchema : entity === "machine_identities" ? machineIdentitySchema : entity === "resources" ? resourceSchema : entity === "credentials" ? credentialMetadataSchema : accessRelationshipSchema;
+  const seen = new Map<string, number>();
   return parseCsv(text).map((row) => {
     const mappedValues = Object.fromEntries(Object.entries(row.values).map(([header, value]) => [headerAliases[header] ?? header, value]));
     row = { ...row, values: mappedValues };
     const result = schema.safeParse(toInput(entity, row.values));
-    return result.success ? { ...row, valid: true, errors: [], parsed: result.data as Record<string, unknown> } : { ...row, valid: false, errors: result.error.issues.map(issueMessage) };
+    if (!result.success) return { ...row, valid: false, errors: result.error.issues.map(issueMessage), warnings: [] };
+    const parsed = result.data as Record<string, unknown>;
+    const key = entity === "security_inventory" || entity === "machine_identities" ? `${String(parsed.provider ?? "").toLowerCase()}::${String(parsed.externalId ?? "").toLowerCase()}` : entity === "resources" ? `${String(parsed.provider ?? "").toLowerCase()}::${String(parsed.externalId ?? "").toLowerCase()}` : entity === "credentials" ? `${parsed.machineIdentityId}::${parsed.credentialType}::${String(parsed.label).toLowerCase()}` : `${parsed.machineIdentityId}::${parsed.resourceId}::${String(parsed.accessLevel).toLowerCase()}`;
+    const firstRow = key === "::" ? undefined : seen.get(key);
+    if (firstRow === undefined && key !== "::") seen.set(key, row.row);
+    const warnings = firstRow === undefined ? [] : [`Duplicate of row ${firstRow}. On confirmation, the later row refreshes the same stable record rather than creating a second identity or resource.`];
+    return { ...row, valid: true, errors: [], warnings, parsed };
   });
 }
 

@@ -38,4 +38,11 @@ describe("CSV import safety and preview", () => {
     expect(validateCsv("machine_identities", csv)[0].valid).toBe(true);
     expect(detectedColumnMappings(csv)).toContainEqual({ uploaded: "account_name", mappedTo: "name", automatic: true });
   });
+  it("flags repeated stable identity references without making valid rows unimportable", () => {
+    const csv = "name,identity_type,provider,external_id,environment,privilege_level,status\nWorker,service_account,Azure,worker-1,production,standard,active\nWorker updated,service_account,Azure,worker-1,production,high,active";
+    const rows = validateCsv("machine_identities", csv);
+    expect(rows.every((row) => row.valid)).toBe(true);
+    expect(rows[0].warnings).toEqual([]);
+    expect(rows[1].warnings.join(" ")).toMatch(/Duplicate of row 2/);
+  });
 });

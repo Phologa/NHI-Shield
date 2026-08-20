@@ -2,6 +2,10 @@
 
 CSV is the working MVP ingestion path. The recommended `security_inventory` file represents an identity and its optional resource access and credential metadata on each row. Provider plus external ID is the stable reference, so administrators never need database UUIDs. Repeated identities and resources are updated; access and credentials use stable composite keys. The database function runs as one transaction: either every validated row persists or none does.
 
+The import screen displays the required schema before upload, accepts only `.csv` files, rejects secret-bearing columns, and performs a preview without persistence. Confirmation is available only after every row passes validation. Repeated stable references within a file are flagged during review and refreshed by the transactional import rather than creating a second identity or resource.
+
+A synthetic eight-row test file is available at `public/templates/nhi-shield-security-inventory-sample.csv`. It contains metadata only and no real credentials or secrets.
+
 The browser reads a selected `.csv` file locally, detects common heading aliases, displays the mapping, validates every row, shows actionable row errors, and requires explicit confirmation. The server repeats validation, derives the authenticated organisation, adds no caller-supplied tenant selector, and calls the bounded database import function. Import runs and audit events record completion and analysis readiness.
 
 Password, secret, token-value, API-key-value, private-key, client-secret, credential-value, and secret-value columns are rejected. Credential type, label, lifecycle dates, and non-secret metadata are permitted. Imported facts use `observed` provenance. Derived and user-confirmed states are reserved separately and must never be presented as observed facts.

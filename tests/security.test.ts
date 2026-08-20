@@ -16,7 +16,9 @@ describe("RBAC and tenant isolation", () => {
     expect(canLinkOrganisationRecords("org-a", "org-b")).toBe(false);
   });
   it("supports inventory management for analysts without granting remediation execution", () => {
+    expect(hasPermission("organisation_admin", "manage_security_inventory")).toBe(true);
     expect(hasPermission("security_analyst", "manage_security_inventory")).toBe(true);
+    expect(hasPermission("viewer", "manage_security_inventory")).toBe(false);
     expect(hasPermission("security_analyst", "execute_remediation")).toBe(false);
   });
 });
