@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { getServerEnv } from "@/lib/env";
 import { requireUser } from "@/lib/security/authorization";
 import { requireSecurityContext } from "@/lib/security/context";
+import { onboardingErrorMessage } from "@/lib/security/onboarding-errors";
 import { z } from "zod";
 
 export type OnboardingResult = { ok: boolean; message?: string; error?: string; inviteCode?: string; joinUrl?: string };
@@ -19,7 +20,20 @@ const actionError = (error: unknown): OnboardingResult => {
   return { ok: false, error: "The request could not be completed. Nothing was changed; try again or contact an organisation administrator." };
 };
 
-export async function createOrganisation(_previous: OnboardingResult, formData: FormData): Promise<OnboardingResult> { try { const { supabase } = await requireUser(); const parsed = organisationSchema.parse({ name: formData.get("name") }); const { data, error } = await supabase.rpc("create_organisation_with_membership", { org_name: parsed.name, org_slug: null }); if (error || !data) throw new Error("CREATE_FAILED"); revalidatePath("/overview"); return { ok: true, message: "Workspace created. You are now an organisation administrator." }; } catch (error) { return actionError(error); } }
+export async function createOrganisation(_previous: OnboardingResult, formData: FormData): Promise<OnboardingResult> {
+  const { supabase } = await requireUser();
+  try {
+    const parsed = organisationSchema.parse({ name: formData.get("name") });
+    const { data, error } = await supabase.rpc("create_organisation_with_membership", { org_name: parsed.name, org_slug: null });
+    if (error) return { ok: false, error: onboardingErrorMessage(error) };
+    if (!data) return { ok: false, error: onboardingErrorMessage(null) };
+    revalidatePath("/overview");
+    return { ok: true, message: "Workspace created. You are now an organisation administrator." };
+  } catch (error) {
+    if (error instanceof z.ZodError) return { ok: false, error: "Enter an organisation name between 2 and 200 characters." };
+    return { ok: false, error: onboardingErrorMessage(null) };
+  }
+}
 
 export async function acceptInvite(_previous: OnboardingResult, formData: FormData): Promise<OnboardingResult> { try { const { supabase } = await requireUser(); const code = String(formData.get("inviteCode") ?? "").trim().toUpperCase(); if (!/^[A-Z0-9-]{12,64}$/.test(code)) throw new Error("INVALID_CODE"); const { error } = await supabase.rpc("accept_organisation_invite", { invite_hash: hashInvite(code) }); if (error) throw new Error("INVALID_INVITE"); revalidatePath("/overview"); return { ok: true, message: "Invite accepted. Your workspace is ready." }; } catch (error) { return actionError(error); } }
 

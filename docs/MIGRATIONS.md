@@ -14,5 +14,6 @@ No migration is applied automatically by this repository.
 | `202608200008_inventory_bundle_import.sql` | One-file inventory import, external-key mapping, provenance, conflict preservation, and analysis status | Versioned | Verify in target Supabase; depends on migration 007 only by sequence, not schema |
 | `202608200009_fix_membership_role_functions.sql` | Correct membership role-function collisions | Versioned | Verify in target Supabase |
 | `202608200010_fix_inventory_import_identifiers.sql` | Correct inventory import identifier collisions | Versioned | Verify in target Supabase; required for live bundled CSV persistence |
+| `202608200011_restrict_onboarding_rpc_execution.sql` | Restore authenticated-only execution grants for create/join onboarding RPCs | Corrective security migration | Apply to production before treating onboarding as fixed |
 
 Manual process: back up the target database; verify the migration ledger; review and apply missing migrations in order to staging with the Supabase migration workflow; run the Organisation A/B test matrix; only then promote using the organisation’s change process. Migration 005 depends on 004 and is required by CSV confirmation, conversational AI persistence, repeated analysis, and DB-enforced remediation. Migrations 008 and 010 are required for the bundled security-inventory import.
