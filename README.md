@@ -6,9 +6,9 @@ NHI Shield is being developed as an AI cybersecurity monitoring platform. The cu
 
 - Organisation-scoped authentication, membership, role-based permissions, and PostgreSQL row-level security.
 - Manual and CSV ingestion of machine identities, resources, credential metadata, and access relationships.
-- CSV validation, preview, explicit confirmation, atomic persistence, duplicate handling, provenance, import history, and audit events.
+- CSV validation, preview, explicit confirmation, and tested atomic-persistence handling. Live target-database persistence still requires environment verification.
 - Deterministic identity and access risk evaluation with findings, evidence, incidents, reports, and controlled remediation workflow.
-- An authenticated AI Security Analyst grounded in authorised organisation records. It provides citations and allow-listed navigation without direct database access or write tools.
+- A grounded, read-only AI Security Analyst integration boundary with citations and allow-listed navigation. Production answers are not operational until the required server configuration is supplied and verified.
 - Public website, protected security workspace, health/readiness endpoints, and automated security-focused tests.
 
 ## Current limitations
@@ -88,4 +88,5 @@ These milestones are planned work, not current product capabilities.
 - [CSV ingestion](docs/INGESTION.md)
 - [Migration ledger](docs/MIGRATIONS.md)
 - [Current status](docs/STATUS.md)
+- [SITA progress report](docs/SITA-PROGRESS-REPORT.md)
 - [Threat model](docs/threat-model.md)
