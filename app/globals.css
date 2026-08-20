@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
-:root { --ink: #17212b; --muted: #617080; --line: #d5e0e7; --paper: #f5f8fa; --navy: #102c46; --navy-soft: #173c59; --cyan: #58b9c4; --teal: #147d83; --teal-soft: #e4efee; }
+:root { --ink: #16232f; --muted: #607080; --line: #d9e2e8; --paper: #f3f6f8; --navy: #0b263d; --navy-soft: #153d5a; --cyan: #64c4cc; --teal: #087b80; --teal-soft: #e2f1f0; }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--paper); color: var(--ink); font-family: Georgia, "Times New Roman", serif; }
-button, input { font: inherit; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+button, input, select { font: inherit; }
 .sans { font-family: ui-sans-serif, system-ui, sans-serif; }
 .focus-ring:focus-visible { outline: 3px solid #62b9bd; outline-offset: 3px; }
+.panel { border: 1px solid var(--line); border-radius: .75rem; background: white; box-shadow: 0 1px 2px rgb(15 35 50 / 4%); }
+.button-primary { border-radius: .5rem; background: var(--teal); padding: .7rem 1rem; color: white; font-size: .875rem; font-weight: 650; }
