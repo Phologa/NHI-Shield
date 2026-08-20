@@ -12,7 +12,7 @@ type NavItem = { label: string; shortLabel?: string; href: string; glyph: string
 
 const groups: Array<{ label: string; description: string; items: NavItem[] }> = [
   { label: "Monitor", description: "Current security posture", items: [{ label: "Security overview", shortLabel: "Overview", href: "/overview", glyph: "01" }, { label: "Risks & findings", shortLabel: "Risks", href: "/findings", glyph: "02" }, { label: "Incidents", href: "/incidents", glyph: "03" }] },
-  { label: "Discover", description: "Inventory and access", items: [{ label: "Identity inventory", shortLabel: "Inventory", href: "/machine-identities", glyph: "04" }, { label: "Access relationships", shortLabel: "Relationships", href: "/access-graph", glyph: "05" }, { label: "Import company data", shortLabel: "Import", href: "/import", glyph: "06", mutate: true }, { label: "Data sources", href: "/data-sources", glyph: "07", mutate: true }] },
+  { label: "Discover", description: "Inventory and access", items: [{ label: "Machine Identities", href: "/machine-identities", glyph: "04" }, { label: "Access relationships", shortLabel: "Relationships", href: "/access-graph", glyph: "05" }, { label: "Import company data", shortLabel: "Import", href: "/import", glyph: "06", mutate: true }, { label: "Data sources", href: "/data-sources", glyph: "07", mutate: true }] },
   { label: "Respond", description: "Investigate and reduce risk", items: [{ label: "Ask NHI Shield AI", shortLabel: "AI Analyst", href: "/ai-analyst", glyph: "AI" }, { label: "Recommended actions", shortLabel: "Remediation", href: "/remediation", glyph: "08" }, { label: "Reports", href: "/reports", glyph: "09" }, { label: "Audit history", href: "/audit-log", glyph: "10" }] },
 ];
 
