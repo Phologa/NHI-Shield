@@ -1,75 +1,42 @@
-# Milestone Status
+# Project status
 
-> Phase 2 checkpoint 2026-08-20: **IMPLEMENTED LOCALLY / LIVE DATABASE VALIDATION REQUIRED.** The default file-first import is now a complete security-inventory CSV: automatic common-heading mapping, validation and preview, explicit confirmation, atomic persistence, external-key duplicate handling, identity/resource/credential/access creation, observed provenance, ownership-conflict preservation, import history, audit, and analysis-ready status. The downloadable 9-row demo includes risky and healthy comparisons. Migration `202608200008_inventory_bundle_import.sql` is versioned but unapplied. Lint/type-check pass, 30/30 tests pass, and the production webpack build passes. Live persistence is configuration-required because remote migration application is explicitly prohibited. Phase 3 is the exact continuation point.
+## Current release baseline
 
-> Phase 1 checkpoint 2026-08-20: **IMPLEMENTED LOCALLY / LIVE DATABASE VALIDATION REQUIRED.** New accounts now proceed to create-or-join onboarding, invitation and membership mutations are database-enforced and audited, member settings use names/emails instead of UUIDs, viewer/analyst/admin controls remain role-aware, and password recovery has a real password-update destination. Migration `202608200007_foundation_membership_hardening.sql` is versioned but unapplied. Lint and type-check pass; 28/28 tests pass; the production build passes with `next build --webpack`. The default Turbopack build cannot follow this worktree's externally linked `node_modules`. A live two-account browser/RLS test is **CONFIGURATION REQUIRED** because migration 007 has deliberately not been applied remotely. Phase 2 is the exact continuation point.
+- Production release commit: `7dbed185902203cbc9d1a4676b4ee89c2eff1e46`.
+- Phase history through `910a894` is preserved.
+- The release passed lint, TypeScript, 30 automated tests, and a production webpack build.
+- Public, sign-in, and unauthenticated AI-route smoke checks passed.
 
-> Completion run 2026-08-20: local branch `codex/final-completion` adds the real CSV preview/confirm transaction, bounded repeat analysis, multi-turn tenant-grounded AI provider boundary, DB-enforced remediation transitions, connector normalisation foundation, notification outbox, detailed report export, task-led Overview, and expanded security tests. Migration 005 is local-only and must be applied manually after 004. AI, scheduler, email delivery and cloud connectors remain configuration-required; live RLS/browser isolation QA remains a release blocker. See `COMPLETION-RUN.md` and `MIGRATIONS.md`.
+## Current capabilities
 
-> Updated 2026-08-19: The local build now includes organisation onboarding and invitations, CSV import, activity/incidents, a tenant-scoped AI guide mode, controlled manual remediation, honest connector setup states, live reports, and simplified plain-English navigation. The historical milestone notes below describe the earlier baseline.
+- Organisation-scoped authentication, roles, and row-level data isolation.
+- Manual and transactional CSV ingestion for identity and access records.
+- Deterministic security analysis, findings, evidence, incidents, reports, audit history, and controlled remediation.
+- A grounded, read-only AI Analyst integration boundary using authorised records and internal citations.
 
-## Completion-run update
+## Configuration required
 
-- **Ask NHI Shield AI** is prominent and uses a small tenant-scoped read surface. It labels facts, deterministic assessment and unavailable AI interpretation. It has no arbitrary SQL, destructive tool or external provider egress.
-- Remediation follows `proposed -> approved -> manual_action_required -> succeeded / failed / cancelled`; proposers cannot approve their own actions, and state changes are audited.
-- Data Sources identifies CSV as available and Microsoft Entra ID, AWS and Google Cloud as **Not Configured** until real credentials, least-privilege scopes and a scheduled worker exist.
-- Reports show current organisation facts and deterministic outputs. Scheduled email delivery is not configured.
-- Migration `202608190004_ai_remediation_connectors.sql` is local only and must be manually reviewed/applied after migration 003.
-- `APP_URL` plus `SUPABASE_SERVICE_ROLE_KEY` are required for invitation email delivery. SMTP remains a Supabase Auth configuration responsibility.
-- External AI interpretation requires an explicitly approved tenant-data egress and retention design. No tenant security data currently leaves NHI Shield for AI.
-- Remaining release gate: apply migrations 003/004 to staging and run full Organisation A versus Organisation B browser QA for Viewer, Security Analyst and Organisation Admin. Cross-tenant visibility is release-blocking.
+- AI answers require server-only `OPENAI_API_KEY` and `OPENAI_MODEL` deployment variables. Without both, questions are stored in the tenant-scoped conversation and no provider request or fabricated answer occurs.
+- The target database must be verified as having migrations `001` through `010` in order before live import persistence is accepted as tested.
+- Scheduled analysis, notification delivery, and cloud connectors require separate configuration and validation.
 
-## Latest validation
+## Current limitations
 
-`npm run lint` passes with two non-failing server-action signature warnings; `npm run typecheck`, all 8 tests, and `npm run build` pass. The build generates 30 routes and reports only the existing middleware-to-proxy deprecation warning.
+- Continuous AI monitoring, autonomous remediation, and operational cloud sync are not current capabilities.
+- Authenticated production AI and live CSV persistence require a configured test account and target-environment access for final verification.
+- Multi-organisation and multi-role browser/RLS verification remains a public-release gate.
 
-## Current milestone
+## Next public milestone
 
-Milestone 2.0: Core Security Engine.
+1. Configure and verify the existing AI provider integration without changing its grounded/read-only design.
+2. Verify CSV preview, confirmation, persistence, import history, and downstream analysis against the target database.
+3. Complete the repository and history audit, resolve findings, and repeat all release checks.
+4. Change repository visibility only after explicit owner confirmation.
 
-## Implemented
+## Future milestones
 
-- Next.js App Router, strict TypeScript, Tailwind CSS, ESLint, and Vitest configuration.
-- Supabase SSR server client, restricted browser client, session middleware, sign-in, and sign-out.
-- Organisation and membership model with four roles and server-side permission checks.
-- Structured secret-filtering logger, correlation IDs, health, and readiness endpoints.
-- Authenticated command-centre shell with navigation-only empty states.
-- Architecture, threat model, and API documentation.
-- Public NHI Shield website with Home, Platform, About, Security, Privacy, Contact, and Sign In experiences.
-- Reusable NHI Shield brand mark and coherent public/protected visual system.
-- Explicit public and protected route groups; protected navigation includes the requested AI Analyst route.
-- Zod-validated pilot-request form that honestly reports its submission channel is still being configured.
-- Static public environment references compatible with Next.js client-side replacement while retaining Zod validation.
+- Least-privilege production connectors and scheduled ingestion.
+- Production notification delivery and scheduled analysis operations.
+- Expanded monitoring, AI evaluation, governance, and enterprise deployment controls.
 
-## Repository structure
-
-`app` routes and UI, `lib` platform/domain modules, `supabase/migrations` SQL, `tests` security tests, `docs` engineering documentation.
-
-## Database migrations
-
-`202608190001_foundation.sql` creates `organisations`, `memberships`, the membership role enum, RLS, and membership policies.
-
-## Tests and checks
-
-Tests cover role permissions, cross-organisation denial, and invalid environment configuration. `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build` pass. The production build reports a non-blocking Next.js warning that the `middleware` convention is deprecated in favor of `proxy`.
-
-## Known issues and setup requirements
-
-The Supabase issue was caused by public environment values being read through a dynamic `process.env` object. Next.js client replacement requires statically referenced `process.env.NEXT_PUBLIC_*` expressions. `.env.local` is correctly named, rooted, ignored by Git, and contains the two public variables; values are never logged. Interactive sign-in still requires a real Supabase Auth user with a membership row. Pilot-request persistence and delivery are not configured yet. Next.js also reports that the `middleware` convention is deprecated in favor of `proxy`.
-
-## Core engine implementation
-
-- Added migration `202608190002_core_security_engine.sql` for machine identities, credential metadata, resources, access relationships, findings, finding evidence, ingestion sources and audit events.
-- Added composite organisation-aware foreign keys, indexes, updated-at triggers and RLS policies for all new security tables.
-- Added tenant-scoped server context, repositories, validated server actions and deterministic risk rules.
-- Added real manual inventory, identity detail, resource/access relationship, findings/evidence, overview and audit-log workflows.
-- Credential registration explicitly stores metadata only; no secret values are accepted.
-- Incidents, AI Security Analyst and Remediation remain not configured. No automatic connectors or discovery are claimed.
-
-## Core engine limitations
-
-The migration must be applied to the intended Supabase project before the new workflows can persist data. CSV import, external connectors, continuous monitoring, incidents, AI analysis and remediation belong to later milestones. Risk confidence is evidence quality, not compromise probability.
-
-## Exact next milestone
-
-Milestone 2.1: Detection and activity monitoring. Do not implement it as part of the Core Security Engine.
+Future milestones are not represented as implemented features.
