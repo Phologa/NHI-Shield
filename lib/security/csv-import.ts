@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { accessRelationshipSchema, credentialMetadataSchema, machineIdentitySchema, resourceSchema } from "@/lib/validation/security";
 
-export const importEntitySchema = z.enum(["security_inventory", "machine_identities", "credentials", "resources", "access_relationships"]);
+export const importEntitySchema = z.enum(["security_inventory", "machine_identities", "credentials", "resources", "access_relationships", "activity_events"]);
 export type ImportEntity = z.infer<typeof importEntitySchema>;
 export type CsvRow = { row: number; values: Record<string, string> };
 export type ValidatedCsvRow = CsvRow & { valid: boolean; errors: string[]; warnings: string[]; parsed?: Record<string, unknown> };
@@ -20,6 +20,10 @@ const inventorySchema = z.object({
   const credentialFields = [value.credentialType, value.credentialLabel, value.credentialStatus];
   if (credentialFields.some(Boolean) && credentialFields.some((field) => !field)) context.addIssue({ code: "custom", message: "Credential type, label and status are all required when credential metadata is included." });
 });
+const activityEventSchema = z.object({
+  machineIdentityId: z.string().uuid(), resourceId: z.string().uuid().optional(), action: z.string().trim().min(1).max(200), outcome: z.enum(["allowed", "denied", "error"]),
+  occurredAt: z.string().datetime({ offset: true }), source: z.string().trim().min(1).max(100), requestId: z.string().trim().min(1).max(200),
+});
 
 export const csvTemplates: Record<ImportEntity, string> = {
   security_inventory: "name,identity_type,provider,external_id,environment,owner_name,owner_email,privilege_level,status,last_seen_at,description,resource_name,resource_type,resource_provider,resource_external_id,resource_environment,resource_sensitivity,resource_description,access_level,access_privileged,credential_type,credential_label,credential_status,credential_last_rotated_at,credential_expires_at",
@@ -27,6 +31,7 @@ export const csvTemplates: Record<ImportEntity, string> = {
   credentials: "machine_identity_id,credential_type,label,status,last_rotated_at,expires_at,fingerprint_reference",
   resources: "name,resource_type,provider,external_id,environment,sensitivity,description",
   access_relationships: "machine_identity_id,resource_id,access_level,privileged",
+  activity_events: "machine_identity_id,resource_id,action,outcome,occurred_at,source,request_id",
 };
 export const csvSamples: Record<ImportEntity, string> = {
   security_inventory: `name,identity_type,provider,external_id,environment,owner_name,owner_email,privilege_level,status,last_seen_at,description,resource_name,resource_type,resource_provider,resource_external_id,resource_environment,resource_sensitivity,resource_description,access_level,access_privileged,credential_type,credential_label,credential_status,credential_last_rotated_at,credential_expires_at
@@ -43,6 +48,7 @@ Partner Webhook,api_client,Partner,partner-webhook,production,Integration Team,i
   credentials: `${csvTemplates.credentials}\n00000000-0000-4000-8000-000000000001,certificate,Billing certificate,active,2026-01-10,2027-01-10,sha256-reference-only`,
   resources: `${csvTemplates.resources}\nCustomer database,database,Azure,customer-db-prod,production,critical,Stores customer records`,
   access_relationships: `${csvTemplates.access_relationships}\n00000000-0000-4000-8000-000000000001,00000000-0000-4000-8000-000000000002,read,true`,
+  activity_events: `${csvTemplates.activity_events}\n00000000-0000-4000-8000-000000000001,00000000-0000-4000-8000-000000000002,read,denied,2026-08-24T08:00:00Z,entra_audit,entra-request-0001`,
 };
 
 function normaliseHeader(header: string) { return header.trim().toLowerCase().replace(/[\s-]+/g, "_"); }
@@ -77,6 +83,7 @@ function toInput(entity: ImportEntity, values: Record<string, string>) {
   if (entity === "machine_identities") return { name: values.name, identityType: values.identity_type, provider: values.provider || undefined, externalId: values.external_id || undefined, environment: values.environment || "unknown", ownerName: values.owner_name || undefined, ownerEmail: values.owner_email || undefined, privilegeLevel: values.privilege_level || "unknown", status: values.status || "unknown", description: values.description || undefined };
   if (entity === "resources") return { name: values.name, resourceType: values.resource_type, provider: values.provider || undefined, externalId: values.external_id || undefined, environment: values.environment || "unknown", sensitivity: values.sensitivity || "unknown", description: values.description || undefined };
   if (entity === "credentials") return { machineIdentityId: values.machine_identity_id, credentialType: values.credential_type, label: values.label, status: values.status || "unknown", lastRotatedAt: values.last_rotated_at || undefined, expiresAt: values.expires_at || undefined, fingerprintReference: values.fingerprint_reference || undefined };
+  if (entity === "activity_events") return { machineIdentityId: values.machine_identity_id, resourceId: values.resource_id || undefined, action: values.action, outcome: values.outcome, occurredAt: values.occurred_at, source: values.source, requestId: values.request_id };
   return { machineIdentityId: values.machine_identity_id, resourceId: values.resource_id, accessLevel: values.access_level, privileged: values.privileged?.toLowerCase() === "true" };
 }
 
@@ -89,18 +96,18 @@ function issueMessage(issue: z.core.$ZodIssue) {
 }
 
 export function validateCsv(entity: ImportEntity, text: string): ValidatedCsvRow[] {
-  const schema = entity === "security_inventory" ? inventorySchema : entity === "machine_identities" ? machineIdentitySchema : entity === "resources" ? resourceSchema : entity === "credentials" ? credentialMetadataSchema : accessRelationshipSchema;
+  const schema = entity === "security_inventory" ? inventorySchema : entity === "machine_identities" ? machineIdentitySchema : entity === "resources" ? resourceSchema : entity === "credentials" ? credentialMetadataSchema : entity === "activity_events" ? activityEventSchema : accessRelationshipSchema;
   const seen = new Map<string, number>();
   return parseCsv(text).map((row) => {
-    const mappedValues = Object.fromEntries(Object.entries(row.values).map(([header, value]) => [headerAliases[header] ?? header, value]));
+    const mappedValues = Object.fromEntries(Object.entries(row.values).map(([header, value]) => [entity === "activity_events" && header === "source" ? header : headerAliases[header] ?? header, value]));
     row = { ...row, values: mappedValues };
     const result = schema.safeParse(toInput(entity, row.values));
     if (!result.success) return { ...row, valid: false, errors: result.error.issues.map(issueMessage), warnings: [] };
     const parsed = result.data as Record<string, unknown>;
-    const key = entity === "security_inventory" || entity === "machine_identities" ? `${String(parsed.provider ?? "").toLowerCase()}::${String(parsed.externalId ?? "").toLowerCase()}` : entity === "resources" ? `${String(parsed.provider ?? "").toLowerCase()}::${String(parsed.externalId ?? "").toLowerCase()}` : entity === "credentials" ? `${parsed.machineIdentityId}::${parsed.credentialType}::${String(parsed.label).toLowerCase()}` : `${parsed.machineIdentityId}::${parsed.resourceId}::${String(parsed.accessLevel).toLowerCase()}`;
+    const key = entity === "security_inventory" || entity === "machine_identities" ? `${String(parsed.provider ?? "").toLowerCase()}::${String(parsed.externalId ?? "").toLowerCase()}` : entity === "resources" ? `${String(parsed.provider ?? "").toLowerCase()}::${String(parsed.externalId ?? "").toLowerCase()}` : entity === "credentials" ? `${parsed.machineIdentityId}::${parsed.credentialType}::${String(parsed.label).toLowerCase()}` : entity === "activity_events" ? `${String(parsed.source).toLowerCase()}::${String(parsed.requestId).toLowerCase()}` : `${parsed.machineIdentityId}::${parsed.resourceId}::${String(parsed.accessLevel).toLowerCase()}`;
     const firstRow = key === "::" ? undefined : seen.get(key);
     if (firstRow === undefined && key !== "::") seen.set(key, row.row);
-    const warnings = firstRow === undefined ? [] : [`Duplicate of row ${firstRow}. On confirmation, the later row refreshes the same stable record rather than creating a second identity or resource.`];
+    const warnings = firstRow === undefined ? [] : [`Duplicate of row ${firstRow}. On confirmation, the later row refreshes the same stable record rather than creating a duplicate.`];
     return { ...row, valid: true, errors: [], warnings, parsed };
   });
 }

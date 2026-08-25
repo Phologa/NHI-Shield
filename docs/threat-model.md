@@ -9,10 +9,14 @@ Sessions, organisation membership, roles, future machine identity data, audit re
 - Cross-tenant relational joins: composite organisation/record foreign keys and RLS on every core security table.
 - Secret ingestion: credential schema and validation accept metadata only; secret-value fields are intentionally absent.
 - Non-reproducible risk claims: deterministic rules use central thresholds, bounded scores and evidence records.
+- AI cross-tenant disclosure: organisation and role are server-derived, fixed tools filter every query, and RLS independently restricts reads.
+- AI prompt injection: prompts and persisted text are untrusted data; the provider has no SQL, arbitrary tools, service credentials, mutation, remediation, or organisation selection.
+- AI hallucination and severity drift: the application constructs facts, deterministic assessments and references from returned rows; provider output is advisory only.
+- AI data leakage: credential selection is metadata-only and logs exclude prompts, record content and secrets.
 
 ## Residual risks
 
-Production deployment still requires Supabase project controls, redirect URL configuration, secret management, rate limiting, monitoring retention policy, and an operational review of Auth provider settings.
+Production deployment still requires Supabase project controls, redirect URL configuration, managed provider secrets, distributed rate limiting, monitoring retention policy, provider data-processing review, and an operational review of Auth provider settings.
 # Completion-run additions
 
 - AI prompt injection: imported and stored text is untrusted, bounded and supplied as record data; the model has no arbitrary SQL or mutation tool.

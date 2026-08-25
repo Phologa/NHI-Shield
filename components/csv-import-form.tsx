@@ -6,7 +6,7 @@ import { csvSamples, csvTemplates, detectedColumnMappings, type ImportEntity, va
 import { importCsv, type ImportResult } from "@/lib/security/import-actions";
 
 const initial: ImportResult = { ok: true };
-const labels: Record<ImportEntity, string> = { security_inventory: "Complete security inventory (recommended)", machine_identities: "Apps & system accounts only", resources: "Company resources only", access_relationships: "Who can access what", credentials: "Credential metadata (never secrets)" };
+const labels: Record<ImportEntity, string> = { security_inventory: "Complete security inventory (recommended)", machine_identities: "Machine identities only", resources: "Resources only", access_relationships: "Access relationships", credentials: "Credential metadata (never secrets)", activity_events: "Activity events" };
 function fileSize(bytes: number) { return bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(bytes < 10240 ? 1 : 0)} KB`; }
 
 export function CsvImportForm() {

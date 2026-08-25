@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { requireSecurityContext } from "@/lib/security/context";
 import { importEntitySchema, validateCsv } from "@/lib/security/csv-import";
+import { runIncidentDetection } from "@/lib/security/incident-actions";
 
 export type ImportResult = { ok: boolean; message?: string; errors?: string[] };
 export async function importCsv(_previous: ImportResult, formData: FormData): Promise<ImportResult> {
@@ -18,11 +19,14 @@ export async function importCsv(_previous: ImportResult, formData: FormData): Pr
       : entity === "machine_identities" ? { organisation_id: context.organisationId, name: item.name, identity_type: item.identityType, provider: item.provider || null, external_id: item.externalId || null, environment: item.environment, owner_name: item.ownerName || null, owner_email: item.ownerEmail || null, privilege_level: item.privilegeLevel, status: item.status, description: item.description || null, source_type: "csv_import" }
       : entity === "resources" ? { organisation_id: context.organisationId, name: item.name, resource_type: item.resourceType, provider: item.provider || null, external_id: item.externalId || null, environment: item.environment, sensitivity: item.sensitivity, description: item.description || null }
       : entity === "credentials" ? { organisation_id: context.organisationId, machine_identity_id: item.machineIdentityId, credential_type: item.credentialType, label: item.label, status: item.status, last_rotated_at: item.lastRotatedAt || null, expires_at: item.expiresAt || null, fingerprint_reference: item.fingerprintReference || null }
+      : entity === "activity_events" ? { organisation_id: context.organisationId, machine_identity_id: item.machineIdentityId, resource_id: item.resourceId || null, action: item.action, outcome: item.outcome, occurred_at: item.occurredAt, source: item.source, request_id: item.requestId }
       : { organisation_id: context.organisationId, machine_identity_id: item.machineIdentityId, resource_id: item.resourceId, access_level: item.accessLevel, privileged: item.privileged, source: "csv_import" });
-    const { data, error } = entity === "security_inventory" ? await context.supabase.rpc("import_security_inventory_csv", { import_rows: payload }) : await context.supabase.rpc("import_security_csv", { target_entity: entity, import_rows: payload });
+    const { data, error } = entity === "security_inventory" ? await context.supabase.rpc("import_security_inventory_csv", { import_rows: payload }) : entity === "activity_events" ? await context.supabase.rpc("import_activity_events_csv", { import_rows: payload }) : await context.supabase.rpc("import_security_csv", { target_entity: entity, import_rows: payload });
     if (error) return { ok: false, errors: ["Nothing was imported. Check for duplicate records or references to records that do not exist in this company."] };
     const result = (data ?? {}) as { processed?: number; relationships?: number; credentials?: number };
-    revalidatePath("/machine-identities"); revalidatePath("/access-graph"); revalidatePath("/overview"); revalidatePath("/data-sources");
-    return { ok: true, message: entity === "security_inventory" ? `Import complete: ${result.processed ?? payload.length} rows processed, ${result.relationships ?? 0} access relationships mapped, and ${result.credentials ?? 0} credential metadata records linked. Analysis is ready to run.` : `Import complete: ${result.processed ?? payload.length} rows created or updated.` };
+    let incidentsCreated: number | null = 0;
+    if (entity === "activity_events") { try { incidentsCreated = await runIncidentDetection(context); } catch { incidentsCreated = null; } }
+    revalidatePath("/machine-identities"); revalidatePath("/access-graph"); revalidatePath("/overview"); revalidatePath("/data-sources"); revalidatePath("/incidents");
+    return { ok: true, message: entity === "security_inventory" ? `Import complete: ${result.processed ?? payload.length} rows processed, ${result.relationships ?? 0} access relationships mapped, and ${result.credentials ?? 0} credential metadata records linked. Analysis is ready to run.` : entity === "activity_events" ? incidentsCreated === null ? `Activity ingestion complete: ${result.processed ?? payload.length} events persisted. Automatic detection did not complete; run incident detection from the Incidents page.` : `Activity ingestion complete: ${result.processed ?? payload.length} events persisted and deterministic detection created ${incidentsCreated} incident${incidentsCreated === 1 ? "" : "s"}.` : `Import complete: ${result.processed ?? payload.length} rows created or updated.` };
   } catch (error) { return { ok: false, errors: [error instanceof Error ? error.message : "The import could not be completed. Try again."] }; }
 }

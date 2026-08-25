@@ -45,4 +45,11 @@ describe("CSV import safety and preview", () => {
     expect(rows[0].warnings).toEqual([]);
     expect(rows[1].warnings.join(" ")).toMatch(/Duplicate of row 2/);
   });
+  it("validates idempotent activity events and rejects missing request IDs", () => {
+    const rows = validateCsv("activity_events", csvSamples.activity_events);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].valid).toBe(true);
+    const invalid = validateCsv("activity_events", "machine_identity_id,action,outcome,occurred_at,source,request_id\n00000000-0000-4000-8000-000000000001,read,allowed,2026-08-24T08:00:00Z,entra,");
+    expect(invalid[0].valid).toBe(false);
+  });
 });

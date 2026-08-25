@@ -3,8 +3,10 @@ import { csvSamples } from "@/lib/security/csv-import";
 
 const rpc = vi.fn();
 const revalidatePath = vi.fn();
+const runIncidentDetection = vi.fn();
 
 vi.mock("next/cache", () => ({ revalidatePath }));
+vi.mock("@/lib/security/incident-actions", () => ({ runIncidentDetection }));
 vi.mock("@/lib/security/context", () => ({
   requireSecurityContext: vi.fn(async () => ({
     organisationId: "11111111-1111-4111-8111-111111111111",
@@ -18,6 +20,7 @@ describe("confirmed CSV persistence action", () => {
   beforeEach(() => {
     rpc.mockReset();
     revalidatePath.mockReset();
+    runIncidentDetection.mockReset();
   });
 
   it("does not call the database before explicit confirmation", async () => {
@@ -70,5 +73,35 @@ describe("confirmed CSV persistence action", () => {
     expect(result.ok).toBe(false);
     expect(result.errors?.[0]).toMatch(/Nothing was imported/);
     expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("persists activity by stable request ID and runs deterministic detection", async () => {
+    rpc.mockResolvedValue({ data: { processed: 1 }, error: null });
+    runIncidentDetection.mockResolvedValue(1);
+    const { importCsv } = await import("@/lib/security/import-actions");
+    const form = new FormData();
+    form.set("entity", "activity_events");
+    form.set("csv", csvSamples.activity_events);
+    form.set("confirmed", "yes");
+    const result = await importCsv({ ok: true }, form);
+    expect(result.ok).toBe(true);
+    expect(result.message).toMatch(/1 incident/);
+    expect(rpc).toHaveBeenCalledWith("import_activity_events_csv", expect.objectContaining({ import_rows: expect.any(Array) }));
+    expect(runIncidentDetection).toHaveBeenCalledOnce();
+    expect(revalidatePath).toHaveBeenCalledWith("/incidents");
+  });
+
+  it("reports persisted activity accurately when follow-up detection fails", async () => {
+    rpc.mockResolvedValue({ data: { processed: 1 }, error: null });
+    runIncidentDetection.mockRejectedValue(new Error("detection unavailable"));
+    const { importCsv } = await import("@/lib/security/import-actions");
+    const form = new FormData();
+    form.set("entity", "activity_events");
+    form.set("csv", csvSamples.activity_events);
+    form.set("confirmed", "yes");
+    const result = await importCsv({ ok: true }, form);
+    expect(result.ok).toBe(true);
+    expect(result.message).toMatch(/events persisted/i);
+    expect(result.message).toMatch(/run incident detection/i);
   });
 });

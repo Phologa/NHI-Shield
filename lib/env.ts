@@ -8,6 +8,12 @@ const publicSchema = z.object({
 const serverSchema = publicSchema.extend({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   APP_URL: z.string().url().optional(),
+  NHI_AI_PROVIDER: z.enum(["openai", "local"]).optional(),
+  NHI_LOCAL_AI_BASE_URL: z.string().url().optional(),
+  NHI_LOCAL_AI_MODEL: z.string().min(1).optional(),
+  NHI_LOCAL_AI_API_KEY: z.string().min(1).optional(),
+  OPENAI_API_KEY: z.string().min(1).optional(),
+  OPENAI_MODEL: z.string().min(1).optional(),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 
